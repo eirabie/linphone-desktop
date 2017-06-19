@@ -48,8 +48,12 @@ class DesktopTarget(prepare.Target):
         self.output = 'OUTPUT/' + self.name
         self.external_source_path = os.path.join(current_path, 'submodules')
         self.packaging_args = [
-            "-DCMAKE_SKIP_INSTALL_RPATH=YES",
             "-DENABLE_RELATIVE_PREFIX=YES"
+        ]
+        external_builders_path = os.path.join(current_path, 'cmake_builder')
+        self.additional_args = [
+            "-DLINPHONE_BUILDER_EXTERNAL_BUILDERS_PATH=" + external_builders_path,
+            "-DLINPHONE_BUILDER_TARGET=linphoneqt"
         ]
 
 
@@ -138,16 +142,16 @@ class DesktopPreparator(prepare.Preparator):
         ret = prepare.Preparator.check_environment(self)
         if platform.system() == 'Windows':
             ret |= not self.check_is_installed('mingw-get', 'MinGW (https://sourceforge.net/projects/mingw/files/Installer/)')
+        if platform.system() == 'Windows':
+            doxygen_prog = 'doxygen (http://www.stack.nl/~dimitri/doxygen/download.html)'
+            graphviz_prog = 'graphviz (http://graphviz.org/Download.php)'
+        else:
+            doxygen_prog = 'doxygen'
+            graphviz_prog = 'graphviz'
+        ret |= not self.check_is_installed('doxygen', doxygen_prog)
+        ret |= not self.check_is_installed('dot', graphviz_prog)
+        ret |= not self.check_python_module_is_present('pystache')
         if "python" in self.args.target or "python-raspberry" in self.args.target:
-            if platform.system() == 'Windows':
-                doxygen_prog = 'doxygen (http://www.stack.nl/~dimitri/doxygen/download.html)'
-                graphviz_prog = 'graphviz (http://graphviz.org/Download.php)'
-            else:
-                doxygen_prog = 'doxygen'
-                graphviz_prog = 'graphviz'
-            ret |= not self.check_is_installed('doxygen', doxygen_prog)
-            ret |= not self.check_is_installed('dot', graphviz_prog)
-            ret |= not self.check_python_module_is_present('pystache')
             ret |= not self.check_python_module_is_present('wheel')
         return ret
 
